@@ -1,0 +1,16 @@
+# Python
+venv/
+__pycache__/
+*.py[cod]
+db.sqlite3
+
+# Node
+node_modules/
+dist/
+
+# Editor
+.vscode/
+!AGENT.md
+!CLAUDE.md
+!.cursor/
+!.windsurf/
