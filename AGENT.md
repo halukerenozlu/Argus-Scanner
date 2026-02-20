@@ -7,6 +7,20 @@
   - `/Client`: React + TypeScript + Vite (Frontend).
 - **Database**: SQLite (located at `API/db.sqlite3`).
 - **Environment**: Python `venv` is located inside the `API/` folder.
+- **Django Entrypoint**: `manage.py` is located inside the `API/` folder (`/API/manage.py`).
+
+## ▶️ How to Run (Local)
+
+- **Backend (Django)**:
+  - From repo root:
+    - `.\API\venv\Scripts\python.exe manage.py runserver`
+  - Or from `/API`:
+    - `.\venv\Scripts\python.exe ..\manage.py runserver`
+
+- **Frontend (Vite)**:
+  - `cd Client`
+  - `npm install` (first time / when deps change)
+  - `npm run dev`
 
 ## 🛠️ Technical Stack
 

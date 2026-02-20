@@ -1,0 +1,8 @@
+Django==6.0.2
+djangorestframework==3.16.1
+django-cors-headers==4.9.0
+selenium==4.40.0
+undetected-chromedriver==3.5.5
+# setuptools provides the 'distutils' shim removed in Python 3.12,
+# required by undetected-chromedriver at import time.
+setuptools==82.0.0
