@@ -1,130 +1,162 @@
-import { useState } from "react";
-import {
-  Search,
-  ShieldAlert,
-  Globe,
-  Link as LinkIcon,
-  Activity,
-} from "lucide-react";
+import { useState, type KeyboardEvent } from "react";
 import axios from "axios";
-import type { ScanResult } from "../src/types";
+import { Globe, Link as LinkIcon, ShieldAlert } from "lucide-react";
+import type { ScanResult } from "./types";
+import "./App.css";
 
-function App() {
+const API_BASE_URL =
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000/api";
+
+function normalizeUrl(input: string) {
+  const trimmed = input.trim();
+  if (!trimmed) return "";
+  if (/^https?:\/\//i.test(trimmed)) return trimmed;
+  return `https://${trimmed}`;
+}
+
+function Spinner() {
+  return (
+    <svg className="spinner" viewBox="0 0 50 50" fill="none" aria-hidden="true">
+      <circle cx="25" cy="25" r="18" className="spinnerTrack" />
+      <path d="M43 25c0-9.94-8.06-18-18-18" className="spinnerHead">
+        <animateTransform
+          attributeName="transform"
+          type="rotate"
+          from="0 25 25"
+          to="360 25 25"
+          dur="0.8s"
+          repeatCount="indefinite"
+        />
+      </path>
+    </svg>
+  );
+}
+
+export default function App() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
+  const [error, setError] = useState<string | null>(null);
 
   const handleScan = async () => {
-    if (!url) return;
+    const normalized = normalizeUrl(url);
+    if (!normalized || loading) return;
 
     setLoading(true);
-    try {
-      // Django API'sine POST isteği gönderiyoruz
-      const response = await axios.post("http://127.0.0.1:8000/api/analyze/", {
-        url: url,
-      });
+    setError(null);
 
-      // Gelen veriyi ekrana basıyoruz
+    try {
+      const response = await axios.post(`${API_BASE_URL}/analyze/`, { url: normalized });
       setResult(response.data);
-    } catch (error) {
-      console.error("Tarama hatası:", error);
-      alert(
-        "Analiz sırasında bir hata oluştu. Django sunucusunun çalıştığından emin olun.",
-      );
+    } catch (e) {
+      console.error(e);
+      setResult(null);
+      setError("Analiz sırasında bir hata oluştu. Backend çalışıyor mu?");
     } finally {
       setLoading(false);
     }
   };
 
+  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+    if (e.key === "Enter") handleScan();
+  };
+
+  const canSubmit = !!normalizeUrl(url) && !loading;
+
   return (
-    <div className="min-h-screen bg-slate-950 text-slate-200 font-sans p-8">
-      {/* Header */}
-      <header className="max-w-4xl mx-auto text-center mb-12">
-        <h1 className="text-5xl font-extrabold text-transparent bg-clip-text bg-gradient-to-r from-blue-400 to-emerald-400 mb-4">
-          ARGUS SCANNER
-        </h1>
-        <p className="text-slate-400 text-lg">
-          Gizli reklamları ve şüpheli yönlendirmeleri saniyeler içinde tespit
-          edin.
-        </p>
-      </header>
+    <div className="page">
+      <div className="glow" />
 
-      {/* Search Section */}
-      <div className="max-w-3xl mx-auto mb-12">
-        <div className="flex gap-2 p-2 bg-slate-900 rounded-2xl border border-slate-800 shadow-2xl">
-          <input
-            type="text"
-            placeholder="Analiz edilecek URL'yi buraya yapıştırın..."
-            className="flex-1 bg-transparent border-none outline-none px-4 text-white"
-            value={url}
-            onChange={(e) => setUrl(e.target.value)}
-          />
-          <button
-            onClick={handleScan}
-            disabled={loading}
-            className="bg-blue-600 hover:bg-blue-500 text-white px-6 py-3 rounded-xl transition-all flex items-center gap-2 font-bold"
-          >
-            {loading ? (
-              <Activity className="animate-spin" />
-            ) : (
-              <Search size={20} />
-            )}
-            {loading ? "Taranıyor..." : "Analiz Et"}
-          </button>
-        </div>
-      </div>
+      <div className="main">
+        {/* Header */}
+        <header className="header">
+          <img className="logo" src="/logo.png" alt="Argus Logo" width={90} height={90} />
+          <h1 className="title font-bungee">ARGUS SCANNER</h1>
+          <p className="subtitle ">
+            Gizli reklamları ve şüpheli yönlendirmeleri saniyeler içinde tespit edin.
+          </p>
+        </header>
 
-      {/* Results Section */}
-      {result && (
-        <div className="max-w-4xl mx-auto grid grid-cols-1 md:grid-cols-2 gap-6 animate-in fade-in duration-700">
-          <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800">
-            <div className="flex items-center gap-3 mb-4 text-blue-400">
-              <Globe size={24} />
-              <h3 className="font-bold uppercase tracking-wider">
-                Sayfa Bilgisi
-              </h3>
-            </div>
-            <p className="text-xl font-semibold mb-2">{result.title}</p>
-            <p className="text-slate-500 text-sm truncate">{result.url}</p>
+        {/* Input */}
+        <section className="inputShell">
+          <div className="inputRow">
+            <input
+              className="urlInput"
+              value={url}
+              onChange={(e) => {
+                setUrl(e.target.value);
+                setError(null);
+              }}
+              onKeyDown={onKeyDown}
+              placeholder="URL gir (ör. example.com)"
+            />
+
+            <button
+              className="submitButton"
+              disabled={!canSubmit}
+              onClick={handleScan}
+              aria-label="Analiz Et"
+              title="Analiz Et"
+            >
+              {loading ? (
+                <Spinner />
+              ) : (
+                <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
+                  <path
+                    d="M9 14V4M9 4L5 8M9 4L13 8"
+                    className="arrow"
+                    strokeWidth="2"
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                  />
+                </svg>
+              )}
+            </button>
           </div>
 
-          <div className="bg-slate-900 p-6 rounded-3xl border border-slate-800">
-            <div className="flex items-center gap-3 mb-4 text-emerald-400">
-              <LinkIcon size={24} />
-              <h3 className="font-bold uppercase tracking-wider">
-                Bağlantı Analizi
-              </h3>
-            </div>
-            <p className="text-4xl font-black">{result.total_links}</p>
-            <p className="text-slate-500">Tespit edilen toplam link</p>
-          </div>
+          {error && <div className="error">{error}</div>}
+        </section>
 
-          <div
-            className={`col-span-1 md:col-span-2 p-8 rounded-3xl border-2 flex items-center justify-between ${result.is_sponsored ? "border-red-900/50 bg-red-950/20" : "border-emerald-900/50 bg-emerald-950/20"}`}
-          >
-            <div>
-              <div className="flex items-center gap-3 mb-2">
-                <ShieldAlert
-                  className={
-                    result.is_sponsored ? "text-red-500" : "text-emerald-500"
-                  }
-                  size={32}
-                />
-                <h2 className="text-2xl font-bold">
-                  Risk Analizi: %{result.risk_score}
-                </h2>
+        {/* Results */}
+        {result && (
+          <section className="resultsGrid">
+            <div className="card">
+              <div className="cardHeader cardHeader--blue">
+                <Globe size={20} />
+                <div className="cardTitle">Sayfa Bilgisi</div>
               </div>
-              <p className="text-slate-400">
-                {result.is_sponsored
-                  ? "Bu sayfada yüksek ihtimalle bildirilmemiş sponsorlu içerik ve gizli yönlendirmeler bulundu."
-                  : "Sayfa temiz görünüyor, herhangi bir gizli reklam izine rastlanmadı."}
-              </p>
+              <div className="cardValue">{result.title}</div>
+              <div className="cardSub">{result.url}</div>
             </div>
-          </div>
-        </div>
-      )}
+
+            <div className="card">
+              <div className="cardHeader cardHeader--green">
+                <LinkIcon size={20} />
+                <div className="cardTitle">Bağlantı Analizi</div>
+              </div>
+              <div className="bigNumber">{result.total_links}</div>
+              <div className="cardSub">Tespit edilen toplam link</div>
+            </div>
+
+            <div
+              className={[
+                "riskBanner",
+                result.is_sponsored ? "riskBanner--danger" : "riskBanner--safe",
+              ].join(" ")}
+            >
+              <ShieldAlert size={22} className="riskIcon" />
+              <div>
+                <div className="riskTitle">Risk Analizi: %{result.risk_score}</div>
+                <div className="riskText">
+                  {result.is_sponsored
+                    ? "Bildirilmemiş sponsorlu içerik / gizli yönlendirme sinyalleri olabilir."
+                    : "Belirgin bir gizli reklam sinyali yakalanmadı."}
+                </div>
+              </div>
+            </div>
+          </section>
+        )}
+      </div>
     </div>
   );
 }
-
-export default App;
