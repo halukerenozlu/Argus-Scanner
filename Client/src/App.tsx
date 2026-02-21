@@ -1,7 +1,7 @@
 import { useState, type KeyboardEvent } from "react";
 import axios from "axios";
 import { Globe, Link as LinkIcon, ShieldAlert } from "lucide-react";
-import type { ScanResult } from "./types";
+import { isScanApiError, type ScanResult, type ScanApiError, type AnalyzeResponse } from "./types";
 import "./App.css";
 
 const API_BASE_URL =
@@ -36,22 +36,34 @@ export default function App() {
   const [url, setUrl] = useState("");
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [scanError, setScanError] = useState<ScanApiError | null>(null);
 
   const handleScan = async () => {
     const normalized = normalizeUrl(url);
     if (!normalized || loading) return;
 
     setLoading(true);
-    setError(null);
+    setScanError(null);
+    setResult(null);
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/analyze/`, { url: normalized });
-      setResult(response.data);
+      // validateStatus: () => true prevents Axios from throwing on 4xx/5xx so
+      // the type guard below handles every status code in one place.
+      const response = await axios.post<AnalyzeResponse>(
+        `${API_BASE_URL}/analyze/`,
+        { url: normalized },
+        { validateStatus: () => true },
+      );
+
+      if (isScanApiError(response.data)) {
+        setScanError(response.data);
+      } else {
+        setResult(response.data);
+      }
     } catch (e) {
+      // Only true network failures reach here (no connection, CORS, etc.)
       console.error(e);
-      setResult(null);
-      setError("Analiz sırasında bir hata oluştu. Backend çalışıyor mu?");
+      setScanError({ error: "Sunucuya ulaşılamadı. Backend çalışıyor mu?" });
     } finally {
       setLoading(false);
     }
@@ -85,7 +97,7 @@ export default function App() {
               value={url}
               onChange={(e) => {
                 setUrl(e.target.value);
-                setError(null);
+                setScanError(null);
               }}
               onKeyDown={onKeyDown}
               placeholder="URL gir (ör. example.com)"
@@ -114,7 +126,14 @@ export default function App() {
             </button>
           </div>
 
-          {error && <div className="error">{error}</div>}
+          {scanError && (
+            <div className="error">
+              {scanError.error}
+              {scanError.details && (
+                <span className="errorDetail">{scanError.details}</span>
+              )}
+            </div>
+          )}
         </section>
 
         {/* Results */}
