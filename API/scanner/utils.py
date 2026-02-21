@@ -1,13 +1,39 @@
 # flake8: noqa
 import undetected_chromedriver as uc
 from selenium.webdriver.common.by import By
+from selenium.common.exceptions import TimeoutException, WebDriverException
 import time
+
+
+class ScanError(Exception):
+    """
+    Raised by scan_website() on any recoverable scan failure.
+    Attributes match the JSON error payload returned to the client:
+        error_code -- machine-readable identifier (e.g. 'timeout')
+        error      -- short human-readable summary
+        details    -- concise technical detail; never a full traceback
+    """
+    def __init__(self, error_code, error, details=""):
+        super().__init__(error)
+        self.error_code = error_code
+        self.error = error
+        self.details = details
 
 
 def scan_website(url):
     options = uc.ChromeOptions()
     options.add_argument('--headless')
-    driver = uc.Chrome(options=options)
+
+    # --- Driver initialisation (outside the scan try/finally so we only
+    #     call driver.quit() when a driver actually exists) ---
+    try:
+        driver = uc.Chrome(options=options)
+    except Exception as exc:
+        raise ScanError(
+            "browser_error",
+            "Could not start the browser.",
+            type(exc).__name__,
+        ) from exc
 
     # Dedektif Havuzları
     affiliate_markers = ['ref=', 'tag=', 'aff=',
@@ -52,5 +78,30 @@ def scan_website(url):
             "risk_score": total_risk,
             "is_sponsored": total_risk > 25
         }
+
+    except TimeoutException as exc:
+        # Page did not finish loading within the WebDriver page-load timeout.
+        raise ScanError(
+            "timeout",
+            "The page took too long to load.",
+            exc.msg or type(exc).__name__,
+        ) from exc
+
+    except WebDriverException as exc:
+        # Navigation or WebDriver-level failure (DNS error, crash, bad URL, etc.).
+        # exc.msg is the short one-liner Selenium provides; never the full blob.
+        raise ScanError(
+            "page_load_error",
+            "Failed to load the page.",
+            exc.msg or type(exc).__name__,
+        ) from exc
+
+    except Exception as exc:
+        raise ScanError(
+            "scan_error",
+            "An unexpected error occurred during the scan.",
+            type(exc).__name__,
+        ) from exc
+
     finally:
         driver.quit()

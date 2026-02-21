@@ -15,3 +15,6 @@ dist/
 !.cursor/
 !.windsurf/
 !.gemini/
+
+# Claude Code local settings
+.claude/

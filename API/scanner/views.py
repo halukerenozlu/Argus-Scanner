@@ -3,7 +3,7 @@ from urllib.parse import urlparse
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from .utils import scan_website
+from .utils import scan_website, ScanError
 
 
 def _normalize_url(raw):
@@ -49,7 +49,39 @@ def analyze_url(request):
     if error:
         return Response({"error": error}, status=400)
 
+    # Map ScanError codes to HTTP status codes.
+    # timeout         → 504 Gateway Timeout  (upstream page too slow)
+    # page_load_error → 502 Bad Gateway      (WebDriver / navigation failure)
+    # browser_error   → 502 Bad Gateway      (WebDriver could not start)
+    # scan_error      → 500 Internal Error   (unexpected / unknown)
+    _STATUS_MAP = {
+        "timeout":         504,
+        "page_load_error": 502,
+        "browser_error":   502,
+        "scan_error":      500,
+    }
+
     # Selenium motorunu çalıştır
-    result = scan_website(url)
+    try:
+        result = scan_website(url)
+    except ScanError as exc:
+        status = _STATUS_MAP.get(exc.error_code, 500)
+        return Response(
+            {
+                "error":      exc.error,
+                "error_code": exc.error_code,
+                "details":    exc.details,
+            },
+            status=status,
+        )
+    except Exception:
+        return Response(
+            {
+                "error":      "An unexpected server error occurred.",
+                "error_code": "internal_error",
+                "details":    "",
+            },
+            status=500,
+        )
 
     return Response(result)
