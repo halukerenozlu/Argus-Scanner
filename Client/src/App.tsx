@@ -2,6 +2,7 @@ import { useState, type KeyboardEvent } from "react";
 import axios from "axios";
 import { Globe, Link as LinkIcon, ShieldAlert } from "lucide-react";
 import { isScanApiError, type ScanResult, type ScanApiError, type AnalyzeResponse } from "./types";
+import DetailModal from "./components/DetailModal";
 import "./App.css";
 
 const API_BASE_URL =
@@ -37,6 +38,7 @@ export default function App() {
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<ScanResult | null>(null);
   const [scanError, setScanError] = useState<ScanApiError | null>(null);
+  const [showDetail, setShowDetail] = useState(false);
 
   const handleScan = async () => {
     const normalized = normalizeUrl(url);
@@ -164,7 +166,7 @@ export default function App() {
               ].join(" ")}
             >
               <ShieldAlert size={22} className="riskIcon" />
-              <div>
+              <div className="riskBody">
                 <div className="riskTitle">Risk Analizi: %{result.risk_score}</div>
                 <div className="riskText">
                   {result.is_sponsored
@@ -172,10 +174,20 @@ export default function App() {
                     : "Belirgin bir gizli reklam sinyali yakalanmadı."}
                 </div>
               </div>
+              <button className="detailBtn" onClick={() => setShowDetail(true)}>
+                Daha fazla detay
+              </button>
             </div>
           </section>
         )}
       </div>
+
+      <DetailModal
+        open={showDetail && !!(result || scanError)}
+        onClose={() => setShowDetail(false)}
+        result={result}
+        scanError={scanError}
+      />
     </div>
   );
 }

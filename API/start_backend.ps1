@@ -1,0 +1,9 @@
+# start_backend.ps1
+Set-Location "C:\dev\Argus-Scanner\API"
+
+$env:ARGUS_HEADLESS="1"
+$env:ARGUS_ALLOW_GUI_FALLBACK="0"
+$env:ARGUS_CHROME_MAJOR="145"
+$env:ARGUS_HEADLESS_RETRIES="2"
+
+.\venv\Scripts\python.exe manage.py runserver --noreload --nothreading

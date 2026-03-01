@@ -178,9 +178,11 @@ def scan_website(url):
     #   $env:ARGUS_HEADLESS="1"            headless Chrome (default)
     #   $env:ARGUS_HEADLESS="0"            GUI Chrome (debug only)
     #   $env:ARGUS_ALLOW_GUI_FALLBACK="1"  allow one GUI retry on headless crash
+    #   $env:ARGUS_HEADLESS_RETRIES="2"    headless retries on window crash (default 2)
     #   $env:ARGUS_CHROME_MAJOR="145"      Chrome major version (default 145)
     want_headless = os.getenv("ARGUS_HEADLESS", "1") != "0"
     allow_gui_fallback = os.getenv("ARGUS_ALLOW_GUI_FALLBACK", "0") == "1"
+    headless_retries = max(int(os.getenv("ARGUS_HEADLESS_RETRIES", "2")), 0)
 
     def is_window_crash(exc: ScanError) -> bool:
         """True when Chrome lost its window context during a headless scan."""
@@ -195,25 +197,25 @@ def scan_website(url):
             )
         return False
 
-    # --- Attempt 1: run as configured by ARGUS_HEADLESS ---
-    try:
-        return _attempt(url, headless=want_headless)
-    except ScanError as exc1:
-        # Only activate retry logic when we were running headless AND it was
-        # specifically a window-context crash.  All other errors surface immediately.
-        if not (want_headless and is_window_crash(exc1)):
-            raise
+    # --- Initial attempt + headless retries ---
+    # Total headless attempts = 1 (initial) + headless_retries
+    last_exc = None
+    for attempt in range(1 + headless_retries):
+        try:
+            return _attempt(url, headless=want_headless)
+        except ScanError as exc:
+            # Only retry on window-context crashes while running headless.
+            # All other errors surface immediately.
+            if not (want_headless and is_window_crash(exc)):
+                raise
+            last_exc = exc
 
-    # --- Attempt 2: fresh headless retry ---
-    try:
-        return _attempt(url, headless=True)
-    except ScanError as exc2:
-        if not allow_gui_fallback:
-            raise ScanError(
-                "page_load_error",
-                "Failed to load the page.",
-                "Headless browser crashed; GUI fallback disabled.",
-            ) from exc2
+    # --- All headless attempts exhausted ---
+    if allow_gui_fallback:
+        return _attempt(url, headless=False)
 
-    # --- Attempt 3: GUI fallback (only when ARGUS_ALLOW_GUI_FALLBACK=1) ---
-    return _attempt(url, headless=False)
+    raise ScanError(
+        "page_load_error",
+        "Failed to load the page.",
+        "Headless browser crashed; retries exhausted.",
+    )
