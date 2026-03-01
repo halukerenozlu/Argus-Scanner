@@ -156,5 +156,3 @@ $env:ARGUS_HEADLESS_RETRIES="2"
 ## Known Limitations
 
 - Some heavy websites (ads/anti-bot scripts) may occasionally fail in headless mode depending on environment and browser version.
-
-- The UI is not fully mobile responsive yet.
