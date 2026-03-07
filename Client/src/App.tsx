@@ -1,12 +1,17 @@
 import { useState, type KeyboardEvent } from "react";
 import axios from "axios";
 import { Globe, Link as LinkIcon, ShieldAlert } from "lucide-react";
-import { isScanApiError, type ScanResult, type ScanApiError, type AnalyzeResponse } from "./types";
+import {
+  isScanApiError,
+  type ScanResult,
+  type ScanApiError,
+  type AnalyzeResponse,
+} from "./types";
 import DetailModal from "./components/DetailModal";
 import "./App.css";
 
 const API_BASE_URL =
-  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") ?? "http://127.0.0.1:8000/api";
+  import.meta.env.VITE_API_BASE_URL?.replace(/\/$/, "") || "/api";
 
 function normalizeUrl(input: string) {
   const trimmed = input.trim();
@@ -84,10 +89,17 @@ export default function App() {
       <div className="main">
         {/* Header */}
         <header className="header">
-          <img className="logo" src="/logo.png" alt="Argus Logo" width={90} height={90} />
+          <img
+            className="logo"
+            src="/logo.png"
+            alt="Argus Logo"
+            width={90}
+            height={90}
+          />
           <h1 className="title font-bungee">ARGUS SCANNER</h1>
           <p className="subtitle ">
-            Gizli reklamları ve şüpheli yönlendirmeleri saniyeler içinde tespit edin.
+            Gizli reklamları ve şüpheli yönlendirmeleri saniyeler içinde tespit
+            edin.
           </p>
         </header>
 
@@ -167,7 +179,9 @@ export default function App() {
             >
               <ShieldAlert size={22} className="riskIcon" />
               <div className="riskBody">
-                <div className="riskTitle">Risk Analizi: %{result.risk_score}</div>
+                <div className="riskTitle">
+                  Risk Analizi: %{result.risk_score}
+                </div>
                 <div className="riskText">
                   {result.is_sponsored
                     ? "Bildirilmemiş sponsorlu içerik / gizli yönlendirme sinyalleri olabilir."
