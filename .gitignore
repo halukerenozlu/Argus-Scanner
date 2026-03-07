@@ -33,6 +33,7 @@ lerna-debug.log*
 
 node_modules
 dist
+Client/dist
 dist-ssr
 *.local
 

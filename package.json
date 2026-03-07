@@ -4,10 +4,9 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "vite",
-    "build": "tsc -b && vite build",
-    "lint": "eslint .",
-    "preview": "vite preview"
+    "dev": "cd Client && vite",
+    "build": "cd Client && tsc -b && vite build",
+    "preview": "cd Client && vite preview"
   },
   "dependencies": {
     "axios": "^1.13.5",
