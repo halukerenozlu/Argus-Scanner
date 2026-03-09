@@ -56,10 +56,10 @@ python -m venv venv
 pip install -r requirements.txt
 ```
 
-Run the server:
+Run the server (from root directory):
 
 ```
-.\venv\Scripts\python.exe manage.py runserver --noreload --nothreading
+powershell -ExecutionPolicy Bypass -File .\API\start_backend.ps1
 ```
 
 Backend URL:
