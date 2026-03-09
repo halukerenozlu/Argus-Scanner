@@ -1,43 +1,125 @@
-# 🤖 AGUS SCANNER - MASTER AGENT GUIDE
+# 🤖 ARGUS SCANNER - MASTER AGENT GUIDE
 
-## 🏗️ Project Architecture
+## Project Overview
 
-- **Monorepo Structure**: Split into two main directories.
-  - `/API`: Django REST Framework (Backend) + Selenium.
-  - `/Client`: React + TypeScript + Vite (Frontend).
-- **Database**: SQLite (located at `API/db.sqlite3`).
-- **Environment**: Python `venv` is located inside the `API/` folder.
-- **Django Entrypoint**: `manage.py` is located inside the `API/` folder (`/API/manage.py`).
+Argus Scanner is a local-first web application for detecting hidden ads and suspicious redirects.
 
-## ▶️ How to Run (Local)
+### Repository Structure
+- `API/`: Django backend and scan logic
+- `Client/`: React + TypeScript + Vite frontend
 
-- **Backend (Django)**:
-  - From repo root:
-    - `.\API\venv\Scripts\python.exe manage.py runserver`
-  - Or from `/API`:
-    - `.\venv\Scripts\python.exe ..\manage.py runserver`
+### Current Priorities
+1. Preserve the existing local development flow
+2. Improve scan performance
+3. Avoid unnecessary deployment-oriented refactors
 
-- **Frontend (Vite)**:
-  - `cd Client`
-  - `npm install` (first time / when deps change)
-  - `npm run dev`
+## Local Run
 
-## 🛠️ Technical Stack
+### Backend
+Preferred:
+```powershell
+powershell -ExecutionPolicy Bypass -File .\API\start_backend.ps1
+```
 
-- **Backend**: Python 3.12, Django 5+, Selenium (undetected-chromedriver).
-- **Frontend**: React 18, TypeScript (Types managed in `src/types/index.ts`), Tailwind CSS, Lucide React.
-- **Communication**: Axios (Base URL: `http://127.0.0.1:8000/api/`).
+Alternative from repo root:
+```powershell
+.\API\venv\Scripts\python.exe .\API\manage.py runserver
+```
 
-## 📜 Coding Rules
+Alternative from `API/`:
+```powershell
+.\venv\Scripts\python.exe .\manage.py runserver
+```
 
-1. **Frontend**: Always use TypeScript. All API models must be defined in `src/types/index.ts`.
-2. **Backend**: Use `@api_view(['POST'])` for scanning endpoints.
-3. **Consistency**: Never delete `.windsurf`, `.cursor`, or `AGENT.md` files.
-4. **Git**: Ensure `node_modules`, `venv`, and `__pycache__` are ignored via `.gitignore`.
+### Frontend
+From `Client/`:
+```powershell
+npm install
+npm run dev
+```
 
-## 📍 Current Progress
+## Technical Stack
 
-- Project structure reorganized into `/API` and `/Client`.
-- **Keyword Hunter Logic**: Implemented in `API/scanner/utils.py`. The scanner now analyzes both URL parameters and page text content for disclosure keywords.
-- **Risk Scoring 2.0**: New algorithm combines link density and keyword matches (Max 100 points).
-- Frontend-Backend connection established via Axios.
+### Backend
+- Python 3.12
+- Django 5+
+- Selenium / undetected-chromedriver
+
+### Frontend
+- React
+- TypeScript
+- Vite
+- Tailwind CSS
+- Lucide React
+- Axios
+
+### Local API Configuration
+- Prefer `VITE_API_BASE_URL` for frontend API configuration
+- Local default backend URL is `http://127.0.0.1:8000/api/`
+
+## Primary Goal
+
+Improve scan speed without breaking the currently working local setup.
+
+The product goal is to provide a fast initial signal in seconds, not a deep exhaustive crawl on every request.
+
+## Guardrails
+
+- Do not migrate the backend away from Django
+- Do not migrate the frontend away from Vite + React
+- Do not move or rename `API/` or `Client/` without explicit approval
+- Do not introduce major architecture changes unless explicitly requested
+- Do not add new dependencies without explaining why first
+- Do not change API routes, request payloads, or response shapes unless necessary
+- Do not rewrite UI copy unless the task explicitly asks for it
+- Do not create duplicate files such as `*_v2`, `*_new`, `*_fixed`
+- Never delete `.windsurf`, `.cursor`, `AGENT.md`, `CLAUDE.md`, or `README.md` unless explicitly asked
+- Do not optimize for cloud deployment unless explicitly requested
+- Do not refactor the project to match Vercel-first or serverless-first conventions unless explicitly requested
+
+## Performance Rules
+
+When improving scan performance:
+
+1. Measure current timing before changing logic
+2. Prefer low-risk optimizations first
+3. Prioritize:
+   - request timeout tuning
+   - session / connection reuse
+   - duplicate URL filtering
+   - skipping irrelevant links (`mailto:`, `tel:`, `javascript:`, fragments, file assets)
+   - limiting scanned links
+4. Prefer fast initial analysis over deeper crawling
+5. Report before/after timing when possible
+
+## Frontend Rules
+
+- Use TypeScript for frontend code
+- Keep API-related types in the existing canonical types location
+- Preserve the current UI flow unless explicitly improving it
+- Avoid unnecessary component rewrites
+
+## Backend Rules
+
+- Keep the current Django structure intact
+- Prefer improving existing scanner logic over replacing it
+- Avoid breaking current local scripts
+- Keep endpoint behavior compatible with the current frontend unless explicitly coordinated
+
+## Workflow
+
+For non-trivial tasks:
+
+1. Briefly explain the plan
+2. Make the smallest useful change first
+3. Then summarize:
+   - what changed
+   - what was tested
+   - known risks
+   - suggested next step
+
+## Documentation
+
+- If setup commands change, update `README.md`
+- If local run steps change, update this guide
+- Keep commands and file paths accurate
