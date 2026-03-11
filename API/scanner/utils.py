@@ -2,15 +2,12 @@
 import logging
 import os
 import time
+
 import undetected_chromedriver as uc
+from selenium.common.exceptions import NoSuchWindowException, TimeoutException, WebDriverException
 from selenium.webdriver.common.by import By
-from selenium.common.exceptions import (
-    TimeoutException,
-    WebDriverException,
-    NoSuchWindowException,
-)
-from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 logger = logging.getLogger("argus.scanner")
 
@@ -25,19 +22,49 @@ _PAGE_LOAD_TIMEOUT = int(os.getenv("ARGUS_PAGE_LOAD_TIMEOUT", "15"))
 _IMPLICIT_WAIT = int(os.getenv("ARGUS_IMPLICIT_WAIT", "2"))
 _MAX_LINKS = int(os.getenv("ARGUS_MAX_LINKS", "150"))
 _HEADLESS_RETRIES = max(int(os.getenv("ARGUS_HEADLESS_RETRIES", "1")), 0)
+_INCLUDE_TIMING_DEFAULT = os.getenv("ARGUS_INCLUDE_TIMING", "0") == "1"
 
 # Schemes and prefixes that should be skipped during link analysis.
 _SKIP_PREFIXES = (
-    "mailto:", "tel:", "javascript:", "data:", "blob:", "ftp:",
-    "file:", "sms:", "whatsapp:", "viber:",
+    "mailto:",
+    "tel:",
+    "javascript:",
+    "data:",
+    "blob:",
+    "ftp:",
+    "file:",
+    "sms:",
+    "whatsapp:",
+    "viber:",
 )
 
 # File extensions that are never affiliate/redirect targets.
 _SKIP_EXTENSIONS = (
-    ".png", ".jpg", ".jpeg", ".gif", ".svg", ".webp", ".ico",
-    ".css", ".js", ".woff", ".woff2", ".ttf", ".eot",
-    ".pdf", ".zip", ".rar", ".7z", ".tar", ".gz",
-    ".mp3", ".mp4", ".avi", ".mov", ".wmv", ".webm",
+    ".png",
+    ".jpg",
+    ".jpeg",
+    ".gif",
+    ".svg",
+    ".webp",
+    ".ico",
+    ".css",
+    ".js",
+    ".woff",
+    ".woff2",
+    ".ttf",
+    ".eot",
+    ".pdf",
+    ".zip",
+    ".rar",
+    ".7z",
+    ".tar",
+    ".gz",
+    ".mp3",
+    ".mp4",
+    ".avi",
+    ".mov",
+    ".wmv",
+    ".webm",
 )
 
 
@@ -77,14 +104,14 @@ def _make_driver(headless: bool):
     if headless:
         options.add_argument("--headless=new")
 
-    # Stabilite argümanları
+    # Stability arguments
     options.add_argument("--disable-gpu")
     options.add_argument("--disable-dev-shm-usage")
     options.add_argument("--no-sandbox")
     options.add_argument("--window-size=1920,1080")
     options.add_argument("--disable-extensions")
     options.add_argument("--disable-popup-blocking")
-    # Bazı ortamlarda site isolation/headless crash azaltır
+    # Reduces site isolation/headless crash in some environments
     options.add_argument("--disable-features=IsolateOrigins,site-per-process")
 
     try:
@@ -97,20 +124,17 @@ def _make_driver(headless: bool):
         driver.implicitly_wait(_IMPLICIT_WAIT)
         return driver
     except Exception as exc:
-        raise ScanError("browser_error", "Could not start the browser.", type(
-            exc).__name__) from exc
+        raise ScanError("browser_error", "Could not start the browser.", type(exc).__name__) from exc
 
 
 def _switch_to_alive_window(driver):
     try:
         handles = driver.window_handles
     except WebDriverException as exc:
-        raise ScanError("browser_closed",
-                        "Browser window was closed.", str(exc)) from exc
+        raise ScanError("browser_closed", "Browser window was closed.", str(exc)) from exc
 
     if not handles:
-        raise ScanError(
-            "browser_closed", "Browser window was closed.", "No window handles available.")
+        raise ScanError("browser_closed", "Browser window was closed.", "No window handles available.")
 
     for handle in reversed(handles):
         try:
@@ -120,29 +144,21 @@ def _switch_to_alive_window(driver):
         except (NoSuchWindowException, WebDriverException):
             continue
 
-    raise ScanError("browser_closed", "Browser window was closed.",
-                    "All window handles are invalid.")
+    raise ScanError("browser_closed", "Browser window was closed.", "All window handles are invalid.")
 
 
-def _run_scan(driver, url):
-    affiliate_markers = [
-        "ref=",
-        "tag=",
-        "aff=",
-        "clickid=",
-        "utm_medium=affiliate",
-        "promo=",
-    ]
+def _run_scan(driver, url, include_timing=False):
+    affiliate_markers = ["ref=", "tag=", "aff=", "clickid=", "utm_medium=affiliate", "promo="]
     suspicious_keywords = [
-        "işbirliği",
+        "i\u015fbirli\u011fi",
         "reklam",
         "sponsor",
         "hediye",
         "promo",
         "indirim kodu",
-        "ortaklık",
+        "ortakl\u0131k",
         "affiliate",
-        "ücretsiz deneme",
+        "\u00fccretsiz deneme",
     ]
 
     timing = {}
@@ -156,8 +172,7 @@ def _run_scan(driver, url):
 
     # --- HTML parsing (wait for body) ---
     t0 = time.perf_counter()
-    WebDriverWait(driver, 10).until(
-        EC.presence_of_element_located((By.TAG_NAME, "body")))
+    WebDriverWait(driver, 10).until(EC.presence_of_element_located((By.TAG_NAME, "body")))
     timing["html_parse"] = round(time.perf_counter() - t0, 3)
 
     # --- Link extraction ---
@@ -178,9 +193,9 @@ def _run_scan(driver, url):
     # --- Link analysis (filter, check for affiliate markers) ---
     # Dedup is used only to avoid redundant marker checks. Every duplicate
     # match still increments suspicious_count so scoring stays identical to
-    # the original behaviour (one list entry per occurrence, not per unique URL).
+    # the original behavior (one list entry per occurrence, not per unique URL).
     t0 = time.perf_counter()
-    checked_cache = {}          # href -> bool (is suspicious)
+    checked_cache = {}
     suspicious_links = []
     skipped = 0
 
@@ -190,7 +205,7 @@ def _run_scan(driver, url):
             continue
 
         if href in checked_cache:
-            # Already checked — reuse result, skip the marker scan
+            # Already checked; reuse result, skip marker scan
             if checked_cache[href]:
                 suspicious_links.append(href)
             continue
@@ -203,24 +218,27 @@ def _run_scan(driver, url):
 
     # --- Keyword scan ---
     page_text = driver.find_element(By.TAG_NAME, "body").text.lower()
-    found_keywords = [
-        word for word in suspicious_keywords if word in page_text]
+    found_keywords = [word for word in suspicious_keywords if word in page_text]
     timing["link_analysis"] = round(time.perf_counter() - t0, 3)
 
     timing["total"] = round(time.perf_counter() - scan_start, 3)
 
     logger.info(
-        "Scan completed: url=%s total_links=%d inspected=%d skipped=%d "
-        "unique=%d suspicious=%d timing=%s",
-        url, total_links, len(links_to_check), skipped,
-        len(checked_cache), len(suspicious_links), timing,
+        "Scan completed: url=%s total_links=%d inspected=%d skipped=%d unique=%d suspicious=%d timing=%s",
+        url,
+        total_links,
+        len(links_to_check),
+        skipped,
+        len(checked_cache),
+        len(suspicious_links),
+        timing,
     )
 
     link_risk = min(len(suspicious_links) * 10, 50) if total_links > 0 else 0
     keyword_risk = min(len(found_keywords) * 15, 50)
     total_risk = link_risk + keyword_risk
 
-    return {
+    result = {
         "title": driver.title,
         "url": url,
         "total_links": total_links,
@@ -229,34 +247,25 @@ def _run_scan(driver, url):
         "risk_score": total_risk,
         "is_sponsored": total_risk > 25,
     }
+    if include_timing:
+        result["timing"] = timing
+    return result
 
 
-def _attempt(url: str, headless: bool) -> dict:
+def _attempt(url: str, headless: bool, include_timing=False) -> dict:
     """One full scan attempt. Owns its driver lifecycle and always raises
-    ScanError on failure — never leaks raw Selenium exceptions to callers."""
-    driver = _make_driver(headless=headless)  # raises ScanError on init failure
+    ScanError on failure; never leaks raw Selenium exceptions to callers."""
+    driver = _make_driver(headless=headless)
     try:
-        return _run_scan(driver, url)
+        return _run_scan(driver, url, include_timing=include_timing)
     except ScanError:
         raise
     except TimeoutException as exc:
-        raise ScanError(
-            "timeout",
-            "The page took too long to load.",
-            getattr(exc, "msg", "") or type(exc).__name__,
-        ) from exc
+        raise ScanError("timeout", "The page took too long to load.", getattr(exc, "msg", "") or type(exc).__name__) from exc
     except WebDriverException as exc:
-        raise ScanError(
-            "page_load_error",
-            "Failed to load the page.",
-            getattr(exc, "msg", "") or str(exc),
-        ) from exc
+        raise ScanError("page_load_error", "Failed to load the page.", getattr(exc, "msg", "") or str(exc)) from exc
     except Exception as exc:
-        raise ScanError(
-            "scan_error",
-            "An unexpected error occurred during the scan.",
-            type(exc).__name__,
-        ) from exc
+        raise ScanError("scan_error", "An unexpected error occurred during the scan.", type(exc).__name__) from exc
     finally:
         try:
             driver.quit()
@@ -264,7 +273,7 @@ def _attempt(url: str, headless: bool) -> dict:
             pass
 
 
-def scan_website(url):
+def scan_website(url, include_timing=None):
     # Env flags (set in PowerShell before starting runserver):
     #   $env:ARGUS_HEADLESS="1"            headless Chrome (default)
     #   $env:ARGUS_HEADLESS="0"            GUI Chrome (debug only)
@@ -273,9 +282,11 @@ def scan_website(url):
     #   $env:ARGUS_IMPLICIT_WAIT="2"       implicit wait in seconds (default 2)
     #   $env:ARGUS_MAX_LINKS="150"         max links to inspect (default 150)
     #   $env:ARGUS_HEADLESS_RETRIES="1"    headless retries on window crash (default 1)
+    #   $env:ARGUS_INCLUDE_TIMING="1"      include timing breakdown in response
     #   $env:ARGUS_CHROME_MAJOR="145"      Chrome major version (default 145)
     want_headless = os.getenv("ARGUS_HEADLESS", "1") != "0"
     allow_gui_fallback = os.getenv("ARGUS_ALLOW_GUI_FALLBACK", "0") == "1"
+    include_timing = _INCLUDE_TIMING_DEFAULT if include_timing is None else include_timing
 
     def is_window_crash(exc: ScanError) -> bool:
         """True when Chrome lost its window context during a headless scan."""
@@ -292,23 +303,17 @@ def scan_website(url):
 
     # --- Initial attempt + headless retries ---
     # Total headless attempts = 1 (initial) + _HEADLESS_RETRIES
-    last_exc = None
-    for attempt in range(1 + _HEADLESS_RETRIES):
+    for _ in range(1 + _HEADLESS_RETRIES):
         try:
-            return _attempt(url, headless=want_headless)
+            return _attempt(url, headless=want_headless, include_timing=include_timing)
         except ScanError as exc:
             # Only retry on window-context crashes while running headless.
             # All other errors surface immediately.
             if not (want_headless and is_window_crash(exc)):
                 raise
-            last_exc = exc
 
     # --- All headless attempts exhausted ---
     if allow_gui_fallback:
-        return _attempt(url, headless=False)
+        return _attempt(url, headless=False, include_timing=include_timing)
 
-    raise ScanError(
-        "page_load_error",
-        "Failed to load the page.",
-        "Headless browser crashed; retries exhausted.",
-    )
+    raise ScanError("page_load_error", "Failed to load the page.", "Headless browser crashed; retries exhausted.")

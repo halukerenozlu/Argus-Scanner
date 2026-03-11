@@ -1,4 +1,4 @@
-# 🤖 ARGUS SCANNER - MASTER AGENT GUIDE
+# ğŸ¤– ARGUS SCANNER - MASTER AGENT GUIDE
 
 ## Project Overview
 
@@ -73,7 +73,7 @@ The product goal is to provide a fast initial signal in seconds, not a deep exha
 - Do not change API routes, request payloads, or response shapes unless necessary
 - Do not rewrite UI copy unless the task explicitly asks for it
 - Do not create duplicate files such as `*_v2`, `*_new`, `*_fixed`
-- Never delete `.windsurf`, `.cursor`, `AGENT.md`, `CLAUDE.md`, or `README.md` unless explicitly asked
+- Never delete `.windsurf`, `.cursor`, `AGENTS.md`, `CLAUDE.md`, or `README.md` unless explicitly asked
 - Do not optimize for cloud deployment unless explicitly requested
 - Do not refactor the project to match Vercel-first or serverless-first conventions unless explicitly requested
 
@@ -123,3 +123,4 @@ For non-trivial tasks:
 - If setup commands change, update `README.md`
 - If local run steps change, update this guide
 - Keep commands and file paths accurate
+
