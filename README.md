@@ -81,9 +81,7 @@ http://localhost:5173
 Usage
 
 - Start the backend server.
-
 - Start the frontend dev server.
-
 - Open the frontend in your browser and enter a URL to scan.
 
 API
