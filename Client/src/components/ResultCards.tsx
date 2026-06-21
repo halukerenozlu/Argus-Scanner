@@ -35,9 +35,7 @@ export default function ResultCards({ result, onShowDetail }: ResultCardsProps) 
       >
         <ShieldAlert size={22} className="riskIcon" />
         <div className="riskBody">
-          <div className="riskTitle">
-            Risk Analizi: %{result.risk_score}
-          </div>
+          <div className="riskTitle">Risk Analizi: %{result.risk_score}</div>
           <div className="riskText">
             {result.is_sponsored
               ? "Bildirilmemiş sponsorlu içerik / gizli yönlendirme sinyalleri olabilir."

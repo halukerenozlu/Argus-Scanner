@@ -52,10 +52,7 @@ describe("SearchInput", () => {
 
   it("displays scan error", () => {
     render(
-      <SearchInput
-        {...defaultProps}
-        scanError={{ error: "Sunucuya ulaşılamadı." }}
-      />,
+      <SearchInput {...defaultProps} scanError={{ error: "Sunucuya ulaşılamadı." }} />,
     );
     expect(screen.getByText("Sunucuya ulaşılamadı.")).toBeInTheDocument();
   });

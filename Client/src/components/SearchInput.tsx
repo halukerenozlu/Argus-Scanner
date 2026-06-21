@@ -60,9 +60,7 @@ export default function SearchInput({
       {scanError && (
         <div className="error">
           {scanError.error}
-          {scanError.details && (
-            <span className="errorDetail">{scanError.details}</span>
-          )}
+          {scanError.details && <span className="errorDetail">{scanError.details}</span>}
         </div>
       )}
     </section>

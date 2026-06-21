@@ -7,6 +7,8 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Added
+- Prettier for consistent frontend code formatting with ESLint integration
+- Pre-commit hooks via husky + lint-staged (auto-format and lint on commit)
 - Backend unit tests: URL normalization, href filtering, analyze endpoint (17 tests)
 - Frontend component tests with Vitest + Testing Library: Header, SearchInput, ResultCards (17 tests)
 - Test steps in CI pipeline for both backend and frontend
