@@ -19,5 +19,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 - Migrated backend package management from pip/requirements.txt to uv/pyproject.toml
 - Updated `start_backend.ps1` to use `uv run` instead of venv Python
 
+### Removed
+- Unused Vite scaffold assets (`react.svg`, `vite.svg`)
+
 ### Fixed
 - Fixed unused imports and unsorted import blocks in Django scaffold files (admin, models, tests, urls)
+- Added `.ruff_cache/` to `.gitignore`
