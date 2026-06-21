@@ -11,7 +11,12 @@ interface DetailModalProps {
   scanError: ScanApiError | null;
 }
 
-export default function DetailModal({ open, onClose, result, scanError }: DetailModalProps) {
+export default function DetailModal({
+  open,
+  onClose,
+  result,
+  scanError,
+}: DetailModalProps) {
   useBodyScrollLock(open);
   useEscapeKey(open, onClose);
 
@@ -35,7 +40,9 @@ export default function DetailModal({ open, onClose, result, scanError }: Detail
         {/* URL + status */}
         <div className="modalUrlRow">
           {displayUrl && <span className="modalUrl">{displayUrl}</span>}
-          <span className={`modalBadge ${isSuccess ? "modalBadge--ok" : "modalBadge--err"}`}>
+          <span
+            className={`modalBadge ${isSuccess ? "modalBadge--ok" : "modalBadge--err"}`}
+          >
             {isSuccess ? "Başarılı" : "Hata"}
           </span>
         </div>
@@ -58,7 +65,9 @@ export default function DetailModal({ open, onClose, result, scanError }: Detail
               </div>
               <div className="metricItem">
                 <span className="metricLabel">Sponsorlu</span>
-                <span className="metricValue">{result.is_sponsored ? "Evet" : "Hayır"}</span>
+                <span className="metricValue">
+                  {result.is_sponsored ? "Evet" : "Hayır"}
+                </span>
               </div>
               <div className="metricItem">
                 <span className="metricLabel">Anahtar Kelime</span>
@@ -71,7 +80,9 @@ export default function DetailModal({ open, onClose, result, scanError }: Detail
                 <div className="modalSectionTitle">Tespit Edilen Anahtar Kelimeler</div>
                 <div className="chipList">
                   {result.detected_keywords.map((kw) => (
-                    <span key={kw} className="chip">{kw}</span>
+                    <span key={kw} className="chip">
+                      {kw}
+                    </span>
                   ))}
                 </div>
               </div>
