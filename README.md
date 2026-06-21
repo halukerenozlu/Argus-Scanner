@@ -49,11 +49,11 @@ Argus Scanner is a web analysis tool that helps detect hidden ad signals and sus
 
 ### Backend (API)
 
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/).
+
 ```powershell
 cd API
-python -m venv venv
-.\venv\Scripts\Activate.ps1
-pip install -r requirements.txt
+uv sync
 ```
 
 Run the server (from root directory):

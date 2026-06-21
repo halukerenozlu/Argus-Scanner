@@ -1,0 +1,25 @@
+[project]
+name = "argus-scanner-api"
+version = "0.1.0"
+description = "Django REST API + Selenium scanner for detecting hidden ads and suspicious redirects"
+requires-python = ">=3.12"
+dependencies = [
+    "django>=6.0.2,<7",
+    "djangorestframework>=3.16.1,<4",
+    "django-cors-headers>=4.9.0,<5",
+    "selenium>=4.41.0,<5",
+    "undetected-chromedriver>=3.5.5,<4",
+    "setuptools>=82.0.0",
+]
+
+[project.optional-dependencies]
+lint = [
+    "ruff>=0.12.0",
+]
+
+[tool.ruff]
+target-version = "py312"
+line-length = 120
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W"]

@@ -7,4 +7,4 @@ $env:ARGUS_ALLOW_GUI_FALLBACK="0"
 $env:ARGUS_CHROME_MAJOR="145"
 $env:ARGUS_HEADLESS_RETRIES="2"
 
-.\venv\Scripts\python.exe manage.py runserver --noreload --nothreading
+uv run manage.py runserver --noreload --nothreading

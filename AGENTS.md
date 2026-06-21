@@ -16,19 +16,16 @@ Argus Scanner is a local-first web application for detecting hidden ads and susp
 ## Local Run
 
 ### Backend
+Requires [uv](https://docs.astral.sh/uv/getting-started/installation/).
+
 Preferred:
 ```powershell
 powershell -ExecutionPolicy Bypass -File .\API\start_backend.ps1
 ```
 
-Alternative from repo root:
-```powershell
-.\API\venv\Scripts\python.exe .\API\manage.py runserver
-```
-
 Alternative from `API/`:
 ```powershell
-.\venv\Scripts\python.exe .\manage.py runserver
+uv run manage.py runserver
 ```
 
 ### Frontend
