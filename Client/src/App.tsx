@@ -1,12 +1,14 @@
-import { useState, type KeyboardEvent } from "react";
+import { useState } from "react";
 import axios from "axios";
-import { Globe, Link as LinkIcon, ShieldAlert } from "lucide-react";
 import {
   isScanApiError,
   type ScanResult,
   type ScanApiError,
   type AnalyzeResponse,
 } from "./types";
+import Header from "./components/Header";
+import SearchInput from "./components/SearchInput";
+import ResultCards from "./components/ResultCards";
 import DetailModal from "./components/DetailModal";
 import "./App.css";
 
@@ -19,24 +21,6 @@ function normalizeUrl(input: string) {
   if (!trimmed) return "";
   if (/^https?:\/\//i.test(trimmed)) return trimmed;
   return `https://${trimmed}`;
-}
-
-function Spinner() {
-  return (
-    <svg className="spinner" viewBox="0 0 50 50" fill="none" aria-hidden="true">
-      <circle cx="25" cy="25" r="18" className="spinnerTrack" />
-      <path d="M43 25c0-9.94-8.06-18-18-18" className="spinnerHead">
-        <animateTransform
-          attributeName="transform"
-          type="rotate"
-          from="0 25 25"
-          to="360 25 25"
-          dur="0.8s"
-          repeatCount="indefinite"
-        />
-      </path>
-    </svg>
-  );
 }
 
 export default function App() {
@@ -55,8 +39,6 @@ export default function App() {
     setResult(null);
 
     try {
-      // validateStatus: () => true prevents Axios from throwing on 4xx/5xx so
-      // the type guard below handles every status code in one place.
       const response = await axios.post<AnalyzeResponse>(
         `${API_BASE_URL}/analyze/`,
         { url: normalized },
@@ -69,7 +51,6 @@ export default function App() {
         setResult(response.data);
       }
     } catch (e) {
-      // Only true network failures reach here (no connection, CORS, etc.)
       console.error(e);
       setScanError({ error: "Sunucuya ulaşılamadı. Backend çalışıyor mu?" });
     } finally {
@@ -77,8 +58,9 @@ export default function App() {
     }
   };
 
-  const onKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === "Enter") handleScan();
+  const handleUrlChange = (value: string) => {
+    setUrl(value);
+    setScanError(null);
   };
 
   const canSubmit = !!normalizeUrl(url) && !loading;
@@ -88,112 +70,22 @@ export default function App() {
       <div className="glow" />
 
       <div className="main">
-        {/* Header */}
-        <header className="header">
-          <img
-            className="logo"
-            src="/logo.png"
-            alt="Argus Logo"
-            width={90}
-            height={90}
-          />
-          <h1 className="title font-bungee">ARGUS SCANNER</h1>
-          <p className="subtitle ">
-            Gizli reklamları ve şüpheli yönlendirmeleri saniyeler içinde tespit
-            edin.
-          </p>
-        </header>
+        <Header />
 
-        {/* Input */}
-        <section className="inputShell">
-          <div className="inputRow">
-            <input
-              className="urlInput"
-              value={url}
-              onChange={(e) => {
-                setUrl(e.target.value);
-                setScanError(null);
-              }}
-              onKeyDown={onKeyDown}
-              placeholder="URL gir (ör. example.com)"
-            />
+        <SearchInput
+          url={url}
+          loading={loading}
+          canSubmit={canSubmit}
+          scanError={scanError}
+          onUrlChange={handleUrlChange}
+          onScan={handleScan}
+        />
 
-            <button
-              className="submitButton"
-              disabled={!canSubmit}
-              onClick={handleScan}
-              aria-label="Analiz Et"
-              title="Analiz Et"
-            >
-              {loading ? (
-                <Spinner />
-              ) : (
-                <svg width="16" height="16" viewBox="0 0 18 18" fill="none">
-                  <path
-                    d="M9 14V4M9 4L5 8M9 4L13 8"
-                    className="arrow"
-                    strokeWidth="2"
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                  />
-                </svg>
-              )}
-            </button>
-          </div>
-
-          {scanError && (
-            <div className="error">
-              {scanError.error}
-              {scanError.details && (
-                <span className="errorDetail">{scanError.details}</span>
-              )}
-            </div>
-          )}
-        </section>
-
-        {/* Results */}
         {result && (
-          <section className="resultsGrid">
-            <div className="card">
-              <div className="cardHeader cardHeader--blue">
-                <Globe size={20} />
-                <div className="cardTitle">Sayfa Bilgisi</div>
-              </div>
-              <div className="cardValue">{result.title}</div>
-              <div className="cardSub">{result.url}</div>
-            </div>
-
-            <div className="card">
-              <div className="cardHeader cardHeader--green">
-                <LinkIcon size={20} />
-                <div className="cardTitle">Bağlantı Analizi</div>
-              </div>
-              <div className="bigNumber">{result.total_links}</div>
-              <div className="cardSub">Tespit edilen toplam link</div>
-            </div>
-
-            <div
-              className={[
-                "riskBanner",
-                result.is_sponsored ? "riskBanner--danger" : "riskBanner--safe",
-              ].join(" ")}
-            >
-              <ShieldAlert size={22} className="riskIcon" />
-              <div className="riskBody">
-                <div className="riskTitle">
-                  Risk Analizi: %{result.risk_score}
-                </div>
-                <div className="riskText">
-                  {result.is_sponsored
-                    ? "Bildirilmemiş sponsorlu içerik / gizli yönlendirme sinyalleri olabilir."
-                    : "Belirgin bir gizli reklam sinyali yakalanmadı."}
-                </div>
-              </div>
-              <button className="detailBtn" onClick={() => setShowDetail(true)}>
-                Daha fazla detay
-              </button>
-            </div>
-          </section>
+          <ResultCards
+            result={result}
+            onShowDetail={() => setShowDetail(true)}
+          />
         )}
       </div>
 

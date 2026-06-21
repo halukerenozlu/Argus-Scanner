@@ -9,6 +9,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ### Added
 - GitHub Actions CI pipeline with backend (ruff + Django check) and frontend (tsc + ESLint) jobs
 
+### Refactored
+- Split `App.tsx` into focused components: `Header`, `SearchInput`, `ResultCards`, `Spinner`
+
 ### Changed
 - Migrated backend package management from pip/requirements.txt to uv/pyproject.toml
 - Updated `start_backend.ps1` to use `uv run` instead of venv Python
