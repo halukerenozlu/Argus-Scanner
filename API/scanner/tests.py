@@ -1,9 +1,9 @@
-from unittest.mock import patch, MagicMock
+from unittest.mock import patch
 
 from django.test import TestCase
 from rest_framework.test import APIClient
 
-from .utils import _should_skip_href, ScanError
+from .utils import ScanError, _should_skip_href
 from .views import _normalize_url
 
 
