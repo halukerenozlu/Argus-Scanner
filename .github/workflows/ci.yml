@@ -27,6 +27,9 @@ jobs:
       - name: Django system check
         run: uv run python manage.py check
 
+      - name: Run tests
+        run: uv run python manage.py test scanner -v 2
+
   frontend:
     name: Frontend Lint & Typecheck
     runs-on: ubuntu-latest
@@ -50,3 +53,6 @@ jobs:
 
       - name: ESLint
         run: npm run lint
+
+      - name: Run tests
+        run: npm test

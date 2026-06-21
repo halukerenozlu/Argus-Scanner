@@ -7,6 +7,9 @@ The format is based on [Keep a Changelog](https://keepachangelog.com/), and this
 ## [Unreleased]
 
 ### Added
+- Backend unit tests: URL normalization, href filtering, analyze endpoint (17 tests)
+- Frontend component tests with Vitest + Testing Library: Header, SearchInput, ResultCards (17 tests)
+- Test steps in CI pipeline for both backend and frontend
 - GitHub Actions CI pipeline with backend (ruff + Django check) and frontend (tsc + ESLint) jobs
 
 ### Refactored
